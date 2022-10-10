@@ -92,13 +92,13 @@ module RailsEventStoreActiveRecord
         stream = stream.where(older_than_or_equal_condition(spec)) if spec.older_than_or_equal
         stream = stream.where(newer_than_condition(spec)) if spec.newer_than
         stream = stream.where(newer_than_or_equal_condition(spec)) if spec.newer_than_or_equal
-        stream.order(id: order(spec))
+        stream.order(created_at: order(spec))
       else
         stream = @stream_klass.preload(:event).where(stream: spec.stream.name)
         stream = stream.where(event_id: spec.with_ids) if spec.with_ids?
         stream = stream.where(@event_klass.table_name => { event_type: spec.with_types }) if spec.with_types?
         stream = ordered(stream.joins(:event), spec)
-        stream = stream.order(id: order(spec))
+        stream = stream.order(created_at: order(spec))
         stream = stream.limit(spec.limit) if spec.limit?
         stream = stream.where(start_condition(spec)) if spec.start
         stream = stream.where(stop_condition(spec)) if spec.stop
@@ -121,14 +121,14 @@ module RailsEventStoreActiveRecord
       end
     end
 
-    def start_offset_condition(specification, record_id, search_in)
-      condition = "#{search_in}.id #{specification.forward? ? ">" : "<"} ?"
-      [condition, record_id]
+    def start_offset_condition(specification, record, search_in)
+      condition = "#{search_in}.created_at #{specification.forward? ? ">" : "<"} ?"
+      [condition, record.created_at]
     end
 
-    def stop_offset_condition(specification, record_id, search_in)
-      condition = "#{search_in}.id #{specification.forward? ? "<" : ">"} ?"
-      [condition, record_id]
+    def stop_offset_condition(specification, record, search_in)
+      condition = "#{search_in}.created_at #{specification.forward? ? "<" : ">"} ?"
+      [condition, record.created_at]
     end
 
     def start_condition(specification)
